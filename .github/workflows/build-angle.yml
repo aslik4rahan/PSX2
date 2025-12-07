@@ -35,13 +35,13 @@ jobs:
         run: |
           cd "${ANGLE_DIR}"
           python3 - <<'PY'
-from pathlib import Path
+          from pathlib import Path
 
-gclient = Path(".gclient")
-text = gclient.read_text().splitlines()
-text = [line for line in text if not line.strip().startswith("target_os")]
-text.append("target_os = ['android']")
-gclient.write_text("\n".join(text) + "\n")
+          gclient = Path(".gclient")
+          text = gclient.read_text().splitlines()
+          text = [line for line in text if not line.strip().startswith("target_os")]
+          text.append("target_os = ['android']")
+          gclient.write_text("\n".join(text) + "\n")
 PY
 
       - name: Sync ANGLE dependencies (Android)
