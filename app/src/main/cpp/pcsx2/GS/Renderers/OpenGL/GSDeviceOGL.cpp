@@ -635,7 +635,6 @@ bool GSDeviceOGL::CheckFeatures(bool& buggy_pbo)
 	//bool vendor_id_amd = false;
 	bool vendor_id_nvidia = false;
 	//bool vendor_id_intel = false;
-	bool vendor_id_arm_mali = false;
 
 	const char* vendor = (const char*)glGetString(GL_VENDOR);
 	const char* renderer = (const char*)glGetString(GL_RENDERER);
@@ -666,12 +665,6 @@ bool GSDeviceOGL::CheckFeatures(bool& buggy_pbo)
 		Console.WriteLn(Color_StrongBlue, "GL: Intel GPU detected.");
 		//vendor_id_intel = true;
 	}
-	else if (vendor_lower.find("arm") != std::string::npos || renderer_lower.find("mali") != std::string::npos)
-	{
-		Console.Warning("GL: ARM Mali GPU detected - applying workarounds for 2D graphics issues.");
-		vendor_id_arm_mali = true;
-	}
-
 	GLint major_gl = 0;
 	GLint minor_gl = 0;
 	glGetIntegerv(GL_MAJOR_VERSION, &major_gl);
@@ -829,50 +822,6 @@ bool GSDeviceOGL::CheckFeatures(bool& buggy_pbo)
 		m_features.point_expand ? "hardware" : (m_features.vs_expand ? "vertex expanding" : "UNSUPPORTED"),
 		m_features.line_expand ? "hardware" : (m_features.vs_expand ? "vertex expanding" : "UNSUPPORTED"),
 		m_features.vs_expand ? "vertex expanding" : "CPU");
-
-	// Mali GPU workarounds for missing 2D graphics
-	if (vendor_id_arm_mali)
-	{
-		Console.Warning("GL: Applying Mali GPU workarounds:");
-		
-		// Mali has issues with framebuffer fetch - disable it
-		if (m_features.framebuffer_fetch)
-		{
-			Console.Warning("  - Disabling framebuffer fetch (causes 2D graphics issues on Mali)");
-			m_features.framebuffer_fetch = false;
-		}
-		
-
-		// Force texture barriers OFF on Mali to use safe RT copies
-		if (m_features.texture_barrier)
-		{
-			Console.Warning("  - Disabling texture barriers (to force safe RT copies for HUD)");
-			m_features.texture_barrier = false;
-		}
-		
-		// Disable vertex shader expansion on Mali (can cause rendering issues)
-		if (m_features.vs_expand)
-		{
-			Console.Warning("  - Disabling vertex shader expansion (unstable on Mali)");
-			m_features.vs_expand = false;
-		}
-		
-		// Force PBO usage off on Mali (can cause texture corruption)
-		if (!buggy_pbo)
-		{
-			Console.Warning("  - Disabling PBO for texture uploads (causes corruption on Mali)");
-			buggy_pbo = true;
-		}
-		
-		// Disable download PBO as well
-		if (!m_disable_download_pbo)
-		{
-			Console.Warning("  - Disabling PBO for texture downloads (causes corruption on Mali)");
-			m_disable_download_pbo = true;
-		}
-		
-		Console.Warning("GL: Mali workarounds applied. If 2D graphics still missing, try Software renderer.");
-	}
 
 	return true;
 }
