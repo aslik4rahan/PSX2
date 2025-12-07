@@ -29,8 +29,8 @@ android {
         applicationId = "com.izzy2lost.psx2"
         minSdk = 26
         targetSdk = 36
-        versionCode 16
-        versionName "1.1.4"
+        versionCode 17
+        versionName "1.1.5"
         // APK
         base.archivesName = "PSX2_${versionCode}_${new Date().format('yyyyMMddHHmm')}"
 

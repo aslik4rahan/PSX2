@@ -430,7 +430,18 @@ public class MainActivity extends AppCompatActivity implements GamesCoverDialogF
         super.onCreate(savedInstanceState);
         
         // Enable edge-to-edge for Android 15+ compatibility
-        EdgeToEdge.enable(this);
+        // Use SystemBarStyle to avoid deprecated setStatusBarColor/setNavigationBarColor APIs
+        EdgeToEdge.enable(
+            this,
+            androidx.activity.SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            ),
+            androidx.activity.SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            )
+        );
         
         // Hide action bar to improve immersive appearance
         if (getSupportActionBar() != null) {
