@@ -370,6 +370,9 @@ void AudioStream::StereoSampleReaderImpl(SampleType* dest, const SampleType* src
 
 void AudioStream::InternalWriteFrames(const SampleType* data, u32 num_frames)
 {
+	if (!m_buffer || m_buffer_size == 0)
+		return;
+
 	const u32 free = m_buffer_size - GetBufferedFramesRelaxed();
 	if (free <= num_frames)
 	{
@@ -635,6 +638,9 @@ void AudioStream::EndWrite(u32 num_frames)
 
 void AudioStream::WriteChunk(const SampleType* chunk)
 {
+	if (!m_buffer || m_buffer_size == 0)
+		return;
+
 	if (!IsExpansionEnabled() && !IsStretchEnabled())
 	{
 		InternalWriteFrames(chunk, CHUNK_SIZE);

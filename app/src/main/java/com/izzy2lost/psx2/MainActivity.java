@@ -38,6 +38,7 @@ import android.app.RemoteAction;
 import android.graphics.drawable.Icon;
 import android.app.PendingIntent;
 import android.content.pm.PackageManager;
+import android.content.pm.ActivityInfo;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -55,7 +56,6 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.graphics.Insets;
 
 import com.google.android.material.button.MaterialButton;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -70,6 +70,10 @@ import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements GamesCoverDialogFragment.OnGameSelectedListener, ControllerInputHandler.ControllerInputListener {
+    public static final int ORIENTATION_AUTO = 0;
+    public static final int ORIENTATION_LANDSCAPE = 1;
+    public static final int ORIENTATION_PORTRAIT = 2;
+
     private String m_szGamefile = "";
 
     private HIDDeviceManager mHIDDeviceManager;
@@ -1942,10 +1946,66 @@ public class MainActivity extends AppCompatActivity implements GamesCoverDialogF
         }
     }
 
+    private int normalizeOrientationPref(int value) {
+        if (value == ORIENTATION_LANDSCAPE || value == ORIENTATION_PORTRAIT) return value;
+        return ORIENTATION_AUTO;
+    }
+
+    public void setOrientationPreference(int mode) {
+        int normalized = normalizeOrientationPref(mode);
+        try {
+            SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+            prefs.edit().putInt("orientation_lock", normalized).apply();
+        } catch (Throwable ignored) {}
+        applyOrientationPreference(normalized);
+    }
+
+    public void applyOrientationPreference() {
+        int mode = ORIENTATION_AUTO;
+        try {
+            SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+            mode = normalizeOrientationPref(prefs.getInt("orientation_lock", ORIENTATION_AUTO));
+        } catch (Throwable ignored) {}
+        applyOrientationPreference(mode);
+    }
+
+    private void applyOrientationPreference(int mode) {
+        int requested = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR;
+        if (mode == ORIENTATION_LANDSCAPE) {
+            requested = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
+        } else if (mode == ORIENTATION_PORTRAIT) {
+            requested = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
+        }
+
+        try {
+            setRequestedOrientation(requested);
+        } catch (Throwable e) {
+            android.util.Log.e("MainActivity", "Failed to apply orientation preference: " + e.getMessage());
+        }
+    }
+
     private void setupDrawerSettings(View header) {
         if (header == null) return;
 
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+
+        MaterialButtonToggleGroup tgOrientation = header.findViewById(R.id.drawer_tg_orientation);
+        View tbOrientAuto = header.findViewById(R.id.drawer_tb_orientation_auto);
+        View tbOrientLand = header.findViewById(R.id.drawer_tb_orientation_landscape);
+        View tbOrientPort = header.findViewById(R.id.drawer_tb_orientation_portrait);
+        if (tgOrientation != null && tbOrientAuto != null && tbOrientLand != null && tbOrientPort != null) {
+            int savedOrientation = normalizeOrientationPref(prefs.getInt("orientation_lock", ORIENTATION_AUTO));
+            int checkId = savedOrientation == ORIENTATION_LANDSCAPE ? tbOrientLand.getId()
+                    : (savedOrientation == ORIENTATION_PORTRAIT ? tbOrientPort.getId() : tbOrientAuto.getId());
+            tgOrientation.check(checkId);
+            tgOrientation.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+                if (!isChecked) return;
+                int mode = ORIENTATION_AUTO;
+                if (checkedId == tbOrientLand.getId()) mode = ORIENTATION_LANDSCAPE;
+                else if (checkedId == tbOrientPort.getId()) mode = ORIENTATION_PORTRAIT;
+                setOrientationPreference(mode);
+            });
+        }
 
         // Aspect Ratio spinner - setup like QuickActions
         Spinner spAspect = header.findViewById(R.id.drawer_sp_aspect_ratio);
@@ -2118,7 +2178,22 @@ public class MainActivity extends AppCompatActivity implements GamesCoverDialogF
                 android.util.Log.e("MainActivity", "SharedPreferences is null during refreshDrawerSettings");
                 return;
             }
-            
+
+            try {
+                MaterialButtonToggleGroup tgOrientation = header.findViewById(R.id.drawer_tg_orientation);
+                View tbOrientAuto = header.findViewById(R.id.drawer_tb_orientation_auto);
+                View tbOrientLand = header.findViewById(R.id.drawer_tb_orientation_landscape);
+                View tbOrientPort = header.findViewById(R.id.drawer_tb_orientation_portrait);
+                if (tgOrientation != null && tbOrientAuto != null && tbOrientLand != null && tbOrientPort != null) {
+                    int savedOrientation = normalizeOrientationPref(prefs.getInt("orientation_lock", ORIENTATION_AUTO));
+                    int checkId = savedOrientation == ORIENTATION_LANDSCAPE ? tbOrientLand.getId()
+                            : (savedOrientation == ORIENTATION_PORTRAIT ? tbOrientPort.getId() : tbOrientAuto.getId());
+                    tgOrientation.check(checkId);
+                }
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "Error refreshing orientation toggle: " + e.getMessage());
+            }
+
             // Refresh spinner values to reflect current settings
             try {
                 Spinner spAspect = header.findViewById(R.id.drawer_sp_aspect_ratio);
@@ -2249,6 +2324,8 @@ public class MainActivity extends AppCompatActivity implements GamesCoverDialogF
             // Apply renderer setting
             int renderer = prefs.getInt("renderer", -1);
             NativeApp.renderGpu(renderer);
+
+            applyOrientationPreference();
             
         } catch (Throwable ignored) {}
     }

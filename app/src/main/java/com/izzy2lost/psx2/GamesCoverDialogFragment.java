@@ -634,9 +634,33 @@ public class GamesCoverDialogFragment extends DialogFragment {
         } catch (Throwable ignored) {}
     }
 
-        private void setupDialogDrawerSettings(View header) {
+    private void setupDialogDrawerSettings(View header) {
         if (header == null) return;
         android.content.SharedPreferences prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
+
+        MaterialButtonToggleGroup tgOrientation = header.findViewById(R.id.drawer_tg_orientation);
+        View tbOrientAuto = header.findViewById(R.id.drawer_tb_orientation_auto);
+        View tbOrientLand = header.findViewById(R.id.drawer_tb_orientation_landscape);
+        View tbOrientPort = header.findViewById(R.id.drawer_tb_orientation_portrait);
+        if (tgOrientation != null && tbOrientAuto != null && tbOrientLand != null && tbOrientPort != null) {
+            int savedOrientation = prefs.getInt("orientation_lock", MainActivity.ORIENTATION_AUTO);
+            int checkId = savedOrientation == MainActivity.ORIENTATION_LANDSCAPE ? tbOrientLand.getId()
+                    : (savedOrientation == MainActivity.ORIENTATION_PORTRAIT ? tbOrientPort.getId() : tbOrientAuto.getId());
+            tgOrientation.check(checkId);
+            tgOrientation.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+                if (!isChecked) return;
+                int mode = MainActivity.ORIENTATION_AUTO;
+                if (checkedId == tbOrientLand.getId()) mode = MainActivity.ORIENTATION_LANDSCAPE;
+                else if (checkedId == tbOrientPort.getId()) mode = MainActivity.ORIENTATION_PORTRAIT;
+                try {
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).setOrientationPreference(mode);
+                    } else {
+                        prefs.edit().putInt("orientation_lock", mode).apply();
+                    }
+                } catch (Throwable ignored) {}
+            });
+        }
 
         // Aspect Ratio spinner
         android.widget.Spinner spAspect = header.findViewById(R.id.drawer_sp_aspect_ratio);
@@ -1245,66 +1269,81 @@ public class GamesCoverDialogFragment extends DialogFragment {
         try {
             View root = getView();
             if (root == null) return;
-            
+
             com.google.android.material.navigation.NavigationView nav = root.findViewById(R.id.dialog_nav_view);
-            if (nav != null && nav.getHeaderCount() > 0) {
-                View header = nav.getHeaderView(0);
-                if (header != null) {
-                    android.content.SharedPreferences prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
-                    
-                    // Refresh spinner values to reflect current settings
-                    android.widget.Spinner spAspect = header.findViewById(R.id.drawer_sp_aspect_ratio);
-                    if (spAspect != null && spAspect.getAdapter() != null) {
-                        int savedAspect = prefs.getInt("aspect_ratio", 1);
-                        android.widget.ArrayAdapter<?> aspectAdapter = (android.widget.ArrayAdapter<?>) spAspect.getAdapter();
-                        if (savedAspect >= 0 && savedAspect < aspectAdapter.getCount()) {
-                            spAspect.setSelection(savedAspect);
-                        }
-                    }
+            if (nav == null || nav.getHeaderCount() == 0) return;
 
-                    android.widget.Spinner spScale = header.findViewById(R.id.drawer_sp_scale);
-                    if (spScale != null && spScale.getAdapter() != null) {
-                        float savedScale = prefs.getFloat("upscale_multiplier", 1.0f);
-                        android.widget.ArrayAdapter<?> scaleAdapter = (android.widget.ArrayAdapter<?>) spScale.getAdapter();
-                        int scaleIndex = Math.max(0, Math.min(scaleAdapter.getCount() - 1, Math.round(savedScale) - 1));
-                        spScale.setSelection(scaleIndex);
-                    }
+            View header = nav.getHeaderView(0);
+            if (header == null) return;
 
-                    android.widget.Spinner spBlending = header.findViewById(R.id.drawer_sp_blending_accuracy);
-                    if (spBlending != null && spBlending.getAdapter() != null) {
-                        int savedBlend = prefs.getInt("blending_accuracy", 1);
-                        android.widget.ArrayAdapter<?> blendAdapter = (android.widget.ArrayAdapter<?>) spBlending.getAdapter();
-                        if (savedBlend >= 0 && savedBlend < blendAdapter.getCount()) {
-                            spBlending.setSelection(savedBlend);
-                        }
-                    }
-                    
-                    // Refresh switch states
-                    com.google.android.material.materialswitch.MaterialSwitch swWide = header.findViewById(R.id.drawer_sw_widescreen);
-                    if (swWide != null) {
-                        swWide.setChecked(prefs.getBoolean("widescreen_patches", true));
-                    }
+            android.content.SharedPreferences prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
 
-                    com.google.android.material.materialswitch.MaterialSwitch swNoInt = header.findViewById(R.id.drawer_sw_no_interlacing);
-                    if (swNoInt != null) {
-                        swNoInt.setChecked(prefs.getBoolean("no_interlacing_patches", true));
-                    }
-
-                    com.google.android.material.materialswitch.MaterialSwitch swLoadTex = header.findViewById(R.id.drawer_sw_load_textures);
-                    if (swLoadTex != null) {
-                        swLoadTex.setChecked(prefs.getBoolean("load_textures", false));
-                    }
-
-                    com.google.android.material.materialswitch.MaterialSwitch swAsyncTex = header.findViewById(R.id.drawer_sw_async_textures);
-                    if (swAsyncTex != null) {
-                        swAsyncTex.setChecked(prefs.getBoolean("async_texture_loading", true));
-                    }
-
-                    com.google.android.material.materialswitch.MaterialSwitch swPrecache = header.findViewById(R.id.drawer_sw_precache_textures);
-                    if (swPrecache != null) {
-                        swPrecache.setChecked(prefs.getBoolean("precache_textures", false));
-                    }
+            try {
+                MaterialButtonToggleGroup tgOrientation = header.findViewById(R.id.drawer_tg_orientation);
+                View tbOrientAuto = header.findViewById(R.id.drawer_tb_orientation_auto);
+                View tbOrientLand = header.findViewById(R.id.drawer_tb_orientation_landscape);
+                View tbOrientPort = header.findViewById(R.id.drawer_tb_orientation_portrait);
+                if (tgOrientation != null && tbOrientAuto != null && tbOrientLand != null && tbOrientPort != null) {
+                    int savedOrientation = prefs.getInt("orientation_lock", MainActivity.ORIENTATION_AUTO);
+                    int checkId = savedOrientation == MainActivity.ORIENTATION_LANDSCAPE ? tbOrientLand.getId()
+                            : (savedOrientation == MainActivity.ORIENTATION_PORTRAIT ? tbOrientPort.getId() : tbOrientAuto.getId());
+                    tgOrientation.check(checkId);
                 }
+            } catch (Exception e) {
+                android.util.Log.e("GamesCoverDialog", "Error refreshing orientation toggle: " + e.getMessage());
+            }
+
+            // Refresh spinner values to reflect current settings
+            android.widget.Spinner spAspect = header.findViewById(R.id.drawer_sp_aspect_ratio);
+            if (spAspect != null && spAspect.getAdapter() != null) {
+                int savedAspect = prefs.getInt("aspect_ratio", 1);
+                android.widget.ArrayAdapter<?> aspectAdapter = (android.widget.ArrayAdapter<?>) spAspect.getAdapter();
+                if (savedAspect >= 0 && savedAspect < aspectAdapter.getCount()) {
+                    spAspect.setSelection(savedAspect);
+                }
+            }
+
+            android.widget.Spinner spScale = header.findViewById(R.id.drawer_sp_scale);
+            if (spScale != null && spScale.getAdapter() != null) {
+                float savedScale = prefs.getFloat("upscale_multiplier", 1.0f);
+                android.widget.ArrayAdapter<?> scaleAdapter = (android.widget.ArrayAdapter<?>) spScale.getAdapter();
+                int scaleIndex = Math.max(0, Math.min(scaleAdapter.getCount() - 1, Math.round(savedScale) - 1));
+                spScale.setSelection(scaleIndex);
+            }
+
+            android.widget.Spinner spBlending = header.findViewById(R.id.drawer_sp_blending_accuracy);
+            if (spBlending != null && spBlending.getAdapter() != null) {
+                int savedBlend = prefs.getInt("blending_accuracy", 1);
+                android.widget.ArrayAdapter<?> blendAdapter = (android.widget.ArrayAdapter<?>) spBlending.getAdapter();
+                if (savedBlend >= 0 && savedBlend < blendAdapter.getCount()) {
+                    spBlending.setSelection(savedBlend);
+                }
+            }
+            
+            // Refresh switch states
+            com.google.android.material.materialswitch.MaterialSwitch swWide = header.findViewById(R.id.drawer_sw_widescreen);
+            if (swWide != null) {
+                swWide.setChecked(prefs.getBoolean("widescreen_patches", true));
+            }
+
+            com.google.android.material.materialswitch.MaterialSwitch swNoInt = header.findViewById(R.id.drawer_sw_no_interlacing);
+            if (swNoInt != null) {
+                swNoInt.setChecked(prefs.getBoolean("no_interlacing_patches", true));
+            }
+
+            com.google.android.material.materialswitch.MaterialSwitch swLoadTex = header.findViewById(R.id.drawer_sw_load_textures);
+            if (swLoadTex != null) {
+                swLoadTex.setChecked(prefs.getBoolean("load_textures", false));
+            }
+
+            com.google.android.material.materialswitch.MaterialSwitch swAsyncTex = header.findViewById(R.id.drawer_sw_async_textures);
+            if (swAsyncTex != null) {
+                swAsyncTex.setChecked(prefs.getBoolean("async_texture_loading", true));
+            }
+
+            com.google.android.material.materialswitch.MaterialSwitch swPrecache = header.findViewById(R.id.drawer_sw_precache_textures);
+            if (swPrecache != null) {
+                swPrecache.setChecked(prefs.getBoolean("precache_textures", false));
             }
         } catch (Throwable ignored) {}
     }

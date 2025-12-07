@@ -444,7 +444,8 @@ __forceinline void spu2Output(StereoOut32 out)
 	{
 		s_current_chunk_pos = 0;
 
-		s_output_stream->WriteChunk(s_current_chunk.data());
+		if (s_output_stream)
+			s_output_stream->WriteChunk(s_current_chunk.data());
 
 		if (SPU2::IsAudioCaptureActive()) [[unlikely]]
 			GSCapture::DeliverAudioPacket(s_current_chunk.data());

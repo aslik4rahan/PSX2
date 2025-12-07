@@ -104,14 +104,66 @@
                 android:textColor="@color/brand_primary"
                 android:checkable="true" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/drawer_tb_sw"
+            style="@style/PSX2.ToggleButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minWidth="0dp"
+            android:text="SW"
+            android:textColor="@color/brand_primary"
+            android:checkable="true" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <!-- Orientation -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Orientation"
+            android:textStyle="bold"
+            android:textColor="@color/brand_primary"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp" />
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/drawer_tg_orientation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:singleSelection="true"
+            app:selectionRequired="true"
+            android:layout_marginBottom="8dp">
+
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/drawer_tb_sw"
+                android:id="@+id/drawer_tb_orientation_auto"
                 style="@style/PSX2.ToggleButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:minWidth="0dp"
-                android:text="SW"
+                android:text="Auto"
+                android:textColor="@color/brand_primary"
+                android:checkable="true" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/drawer_tb_orientation_landscape"
+                style="@style/PSX2.ToggleButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minWidth="0dp"
+                android:text="Landscape"
+                android:textColor="@color/brand_primary"
+                android:checkable="true" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/drawer_tb_orientation_portrait"
+                style="@style/PSX2.ToggleButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minWidth="0dp"
+                android:text="Portrait"
                 android:textColor="@color/brand_primary"
                 android:checkable="true" />
         </com.google.android.material.button.MaterialButtonToggleGroup>
