@@ -29,8 +29,8 @@ android {
         applicationId = "com.izzy2lost.psx2"
         minSdk = 26
         targetSdk = 36
-        versionCode 17
-        versionName "1.1.5"
+        versionCode 18
+        versionName "1.1.6"
         // APK
         base.archivesName = "PSX2_${versionCode}_${new Date().format('yyyyMMddHHmm')}"
 
@@ -111,12 +111,12 @@ android {
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
     implementation 'androidx.appcompat:appcompat:1.7.1'
-    implementation 'com.google.android.material:material:1.14.0-alpha04'
+    implementation 'com.google.android.material:material:1.14.0-alpha07'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'androidx.documentfile:documentfile:1.1.0'
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
-    implementation 'androidx.activity:activity:1.10.1'
+    implementation 'androidx.activity:activity:1.12.1'
     implementation 'androidx.core:core-ktx:1.15.0'
     implementation 'com.github.bumptech.glide:glide:4.16.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
