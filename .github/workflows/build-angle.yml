@@ -30,12 +30,12 @@ jobs:
           rm -rf "${ANGLE_DIR}"
           mkdir -p "${ANGLE_DIR}"
           cd "${ANGLE_DIR}"
-          gclient config --spec "solutions = [ { 'name': '.', 'url': 'https://chromium.googlesource.com/angle/angle.git', 'deps_file': 'DEPS', 'managed': False, 'custom_vars': {}, 'revision': 'origin/main' }, ]; target_os = ['android']"
+          gclient config --spec "solutions = [ { 'name': '.', 'url': 'https://chromium.googlesource.com/angle/angle.git', 'deps_file': 'DEPS', 'managed': True, 'custom_vars': {}, 'revision': 'refs/heads/main' }, ]; target_os = ['android']"
 
       - name: Sync ANGLE dependencies (Android)
         run: |
           cd "${ANGLE_DIR}"
-          gclient sync --no-history --with_branch_heads --with_tags
+          gclient sync --no-history --with_branch_heads --with_tags --revision refs/heads/main
           gclient runhooks
 
       - name: Install Linux build deps for Android
