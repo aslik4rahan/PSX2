@@ -1,14 +1,15 @@
 # 🎮 PSX2 - PlayStation 2 Emulator for Android
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://izzy2lost.github.io/PSX2/license.html)
+[![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com/)
+[![ARM64](https://img.shields.io/badge/Architecture-ARM64-orange.svg)](https://developer.arm.com/)
+[![GitHub](https://img.shields.io/badge/GitHub-izzy2lost%2FPSX2-black.svg)](https://github.com/izzy2lost/PSX2)
+
 
 <a href="https://play.google.com/store/apps/details?id=com.izzy2lost.psx2&pcampaignid=web_share">
   <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80"/>
 </a>
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://izzy2lost.github.io/PSX2/license.html)
-[![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com/)
-[![ARM64](https://img.shields.io/badge/Architecture-ARM64-orange.svg)](https://developer.arm.com/)
-[![GitHub](https://img.shields.io/badge/GitHub-izzy2lost%2FPSX2-black.svg)](https://github.com/izzy2lost/PSX2)
 
 **PSX2** is a high-performance PlayStation 2 emulator for Android devices, bringing your favorite PS2 games to mobile platforms with enhanced graphics and modern features. Experience authentic retro gaming on the go.
 
