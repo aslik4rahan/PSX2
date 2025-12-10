@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements GamesCoverDialogF
     public static final int ORIENTATION_PORTRAIT = 2;
 
     private String m_szGamefile = "";
+    private boolean mRaLoginPromptScheduled = false;
 
     private HIDDeviceManager mHIDDeviceManager;
     private ControllerInputHandler mControllerInputHandler;
@@ -493,9 +494,6 @@ public class MainActivity extends AppCompatActivity implements GamesCoverDialogF
         // Initialize RetroAchievements
         RetroAchievementsManager.initialize(this);
         
-        // Load and auto-login with saved credentials if available
-        NativeApp.loadAndLoginAchievements();
-
         // Initialize controller input handler
         mControllerInputHandler = new ControllerInputHandler(this);
         
@@ -560,6 +558,9 @@ public class MainActivity extends AppCompatActivity implements GamesCoverDialogF
         
         // Setup picture-in-picture support
         addPictureInPictureSupport();
+
+        // Offer RetroAchievements re-login after a short delay (if previously enabled)
+        scheduleRetroAchievementsReLoginPrompt();
     }
     
     @Override
@@ -714,6 +715,17 @@ public class MainActivity extends AppCompatActivity implements GamesCoverDialogF
                                 MemoryCardManagerDialogFragment dialog = new MemoryCardManagerDialogFragment();
                                 dialog.show(getSupportFragmentManager(), "memcard_manager_dialog");
                             } catch (Throwable ignored) {}
+                        });
+                    }
+                    View btnAchievements = header.findViewById(R.id.drawer_btn_achievements);
+                    if (btnAchievements != null) {
+                        btnAchievements.setOnClickListener(v -> {
+                            try {
+                                AchievementsDialogFragment.newInstance()
+                                        .show(getSupportFragmentManager(), "achievements_dialog");
+                            } catch (Throwable t) {
+                                android.util.Log.e("MainActivity", "Failed to open achievements dialog: " + t.getMessage());
+                            }
                         });
                     }
                     View btnAbout = header.findViewById(R.id.drawer_btn_about);
@@ -1556,6 +1568,12 @@ public class MainActivity extends AppCompatActivity implements GamesCoverDialogF
 
     @Override
     protected void onDestroy() {
+        try {
+            NativeApp.achievementsLogout();
+            NativeApp.achievementsShutdown();
+        } catch (Throwable t) {
+            android.util.Log.w("MainActivity", "Error shutting down achievements on exit: " + t.getMessage());
+        }
         NativeApp.shutdown();
         super.onDestroy();
         ////
@@ -2827,7 +2845,7 @@ public class MainActivity extends AppCompatActivity implements GamesCoverDialogF
         // Register broadcast receiver for PiP actions
         registerPiPBroadcastReceiver();
     }
-    
+
     private void registerPiPBroadcastReceiver() {
         // Register receiver for PiP remote actions
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -2876,6 +2894,73 @@ public class MainActivity extends AppCompatActivity implements GamesCoverDialogF
                         
                 setPictureInPictureParams(params);
             } catch (Exception ignored) {}
+        }
+    }
+
+    private void scheduleRetroAchievementsReLoginPrompt() {
+        if (mRaLoginPromptScheduled) return;
+        mRaLoginPromptScheduled = true;
+
+        SharedPreferences prefs = getSharedPreferences("RetroAchievements", MODE_PRIVATE);
+        boolean enabled = prefs.getBoolean("enabled", false);
+        String username = prefs.getString("username", "");
+        String token = prefs.getString("token", "");
+        if (!enabled || TextUtils.isEmpty(username) || TextUtils.isEmpty(token)) {
+            return;
+        }
+
+        View decor = (getWindow() != null) ? getWindow().getDecorView() : null;
+        if (decor == null) return;
+
+        decor.postDelayed(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            showRetroAchievementsReLoginDialog(username, token);
+        }, 5000);
+    }
+
+    private void showRetroAchievementsReLoginDialog(String username, String token) {
+        try {
+            new MaterialAlertDialogBuilder(this,
+                    com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
+                    .setTitle("RetroAchievements")
+                    .setMessage("Sign back in as " + username + "?")
+                    .setNegativeButton("Not now", (d, w) -> clearRetroAchievementsSession())
+                    .setPositiveButton("Sign in", (d, w) -> startRetroAchievementsLogin(username, token))
+                    .show();
+        } catch (Throwable t) {
+            android.util.Log.w("MainActivity", "Failed to show RetroAchievements prompt: " + t.getMessage());
+        }
+    }
+
+    private void startRetroAchievementsLogin(String username, String token) {
+        new Thread(() -> {
+            try {
+                NativeApp.achievementsInitialize();
+                Thread.sleep(500); // let init settle before logging in
+                NativeApp.achievementsLoginWithToken(username, token);
+                android.util.Log.i("MainActivity", "RetroAchievements token login started for " + username);
+            } catch (Throwable t) {
+                android.util.Log.e("MainActivity", "RetroAchievements token login failed: " + t.getMessage());
+            }
+        }).start();
+    }
+
+    private void clearRetroAchievementsSession() {
+        try {
+            NativeApp.achievementsLogout();
+        } catch (Throwable t) {
+            android.util.Log.w("MainActivity", "RA logout error: " + t.getMessage());
+        }
+        try {
+            SharedPreferences prefs = getSharedPreferences("RetroAchievements", MODE_PRIVATE);
+            prefs.edit()
+                    .remove("token")
+                    .remove("login_timestamp")
+                    .remove("saved_password")
+                    .putBoolean("remember_me", false)
+                    .apply();
+        } catch (Throwable t) {
+            android.util.Log.w("MainActivity", "RA prefs clear error: " + t.getMessage());
         }
     }
 

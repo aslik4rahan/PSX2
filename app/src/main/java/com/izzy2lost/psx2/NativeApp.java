@@ -212,6 +212,10 @@ public class NativeApp {
             android.util.Log.e("Achievements", "Cannot load credentials: context is null");
             return;
         }
+        if (hasNoNativeBinary) {
+            android.util.Log.w("Achievements", "Skipping auto-login: native core not loaded");
+            return;
+        }
         
         android.content.SharedPreferences prefs = context.getSharedPreferences("RetroAchievements", Context.MODE_PRIVATE);
         boolean enabled = prefs.getBoolean("enabled", false);
@@ -238,8 +242,10 @@ public class NativeApp {
                 Thread.sleep(500); // Give it time to initialize
                 achievementsLoginWithToken(username, token);
                 android.util.Log.i("Achievements", "Auto-login initiated");
-            } catch (Exception e) {
-                android.util.Log.e("Achievements", "Auto-login failed: " + e.getMessage());
+            } catch (Throwable e) {
+                android.util.Log.e("Achievements", "Auto-login failed", e);
+                // Avoid startup crash loops by disabling auto-login until the user re-enables it manually
+                prefs.edit().putBoolean("enabled", false).apply();
             }
         }).start();
     }

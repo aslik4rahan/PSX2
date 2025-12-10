@@ -233,9 +233,20 @@ public class AchievementsDialogFragment extends DialogFragment {
         
         boolean enabled = mEnabledCheckbox.isChecked();
         
-        // Check if we're logged in by checking if we have a saved username
-        String savedUsername = getPrefs().getString(PREF_USERNAME, "");
+        // Check if we're logged in by looking at saved token/active client
+        SharedPreferences prefs = getPrefs();
+        String savedUsername = prefs.getString(PREF_USERNAME, "");
+        String savedToken = prefs.getString("token", "");
         boolean hasCredentials = !savedUsername.isEmpty();
+        boolean hasToken = savedToken != null && !savedToken.isEmpty();
+        boolean isActive = false;
+        try {
+            isActive = NativeApp.achievementsIsActive();
+        } catch (Throwable t) {
+            android.util.Log.w("Achievements", "Could not query active state: " + t.getMessage());
+        }
+        // Treat as logged in only when we actually have a saved token AND the client reports active
+        boolean loggedIn = hasToken && isActive;
 
         if (mHardcoreModeCheckbox != null) mHardcoreModeCheckbox.setEnabled(enabled);
         if (mNotificationsCheckbox != null) mNotificationsCheckbox.setEnabled(enabled);
@@ -243,12 +254,17 @@ public class AchievementsDialogFragment extends DialogFragment {
         if (mUsernameEdit != null) mUsernameEdit.setEnabled(enabled);
         if (mPasswordEdit != null) mPasswordEdit.setEnabled(enabled);
         
-        // Login button: enabled when achievements are enabled
-        mLoginButton.setEnabled(enabled);
+        // Login button: enabled when achievements are enabled and no active session/token
+        mLoginButton.setEnabled(enabled && !loggedIn);
         mLoginButton.setVisibility(View.VISIBLE);
+        if (loggedIn) {
+            mLoginButton.setText("Logged In");
+        } else {
+            mLoginButton.setText("Login");
+        }
         
-        // Logout button: enabled if we have saved credentials
-        mLogoutButton.setEnabled(enabled && hasCredentials);
+        // Logout button: enabled if we have anything to clear
+        mLogoutButton.setEnabled(enabled && (hasCredentials || hasToken || isActive));
         mLogoutButton.setVisibility(View.VISIBLE);
         
         // Create account button: always enabled
@@ -312,7 +328,7 @@ public class AchievementsDialogFragment extends DialogFragment {
                 android.util.Log.d("Achievements", "After login - isActive: " + isActive);
                 
                 if (isActive) {
-                    Toast.makeText(requireContext(), "Login successful! Token saved for auto-login.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Signed into RetroAchievements.", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(requireContext(), "Login may have failed - check logs", Toast.LENGTH_LONG).show();
                 }
