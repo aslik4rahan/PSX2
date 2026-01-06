@@ -8,12 +8,15 @@
         <item name="android:textAllCaps">true</item>
     </style>
 
-    <!-- M3 elevated button with semi-transparent surface container background and uppercase text -->
+    <!-- M3 elevated button with modern gradient background and rounded corners -->
     <style name="PSX2.ElevatedTransparentButton" parent="Widget.Material3.Button.ElevatedButton">
         <item name="rippleColor">@color/brand_ripple</item>
-        <item name="backgroundTint">@color/brand_surface_container_semi</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="android:background">@drawable/bg_button_modern_selector</item>
         <item name="android:textAllCaps">true</item>
-
+        <item name="android:padding">0dp</item>
+        <item name="iconSize">28dp</item>
+        <item name="iconGravity">textStart</item>
         <item name="strokeColor">@android:color/transparent</item>
         <item name="strokeWidth">0dp</item>
     </style>
