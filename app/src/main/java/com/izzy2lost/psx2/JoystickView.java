@@ -26,16 +26,10 @@ public class JoystickView extends View {
     public JoystickView(Context ctx, AttributeSet attrs, int defStyle) { super(ctx, attrs, defStyle); init(); }
 
     private void init() {
-        basePaint.setColor(0x22000000); // subtle fill
-        basePaint.setStyle(Paint.Style.FILL);
-        // Match Settings/Controls outline (brand primary blue)
-        int brandBlue = ContextCompat.getColor(getContext(), R.color.brand_primary);
-        ringPaint.setColor(brandBlue);
-        ringPaint.setStyle(Paint.Style.STROKE);
-        ringPaint.setStrokeWidth(dp(2));
-        // Knob uses the same brand blue
-        knobPaint.setColor(brandBlue);
-        knobPaint.setStyle(Paint.Style.FILL);
+        basePaint.setAntiAlias(true);
+        ringPaint.setAntiAlias(true);
+        knobPaint.setAntiAlias(true);
+        
         setClickable(true);
     }
 
@@ -46,9 +40,8 @@ public class JoystickView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         centerX = w / 2f;
         centerY = h / 2f;
-        // Make the visible base circle smaller relative to the view size
-        radius = Math.min(w, h) * 0.32f;
-        knobRadius = radius * 0.30f;
+        radius = Math.min(w, h) * 0.35f;
+        knobRadius = radius * 0.45f;
         resetKnob();
     }
 
@@ -61,12 +54,44 @@ public class JoystickView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        // Base circle
+        
+        // Base gradient
+        android.graphics.RadialGradient baseGradient = new android.graphics.RadialGradient(
+            centerX, centerY, radius,
+            new int[]{0x44FFFFFF, 0x11000000},
+            null, android.graphics.Shader.TileMode.CLAMP
+        );
+        basePaint.setShader(baseGradient);
         canvas.drawCircle(centerX, centerY, radius, basePaint);
-        // Outer thin ring
+        
+        // Outer ring (Brand Primary)
+        int brandPrimary = ContextCompat.getColor(getContext(), R.color.brand_primary);
+        ringPaint.setShader(null);
+        ringPaint.setColor(brandPrimary);
+        ringPaint.setStyle(Paint.Style.STROKE);
+        ringPaint.setStrokeWidth(dp(1.5f));
         canvas.drawCircle(centerX, centerY, radius, ringPaint);
-        // Knob
+        
+        // Knob gradient
+        android.graphics.RadialGradient knobGradient = new android.graphics.RadialGradient(
+            knobX, knobY, knobRadius,
+            new int[]{brandPrimary, 0xFF003258}, // Primary to Deep Blue
+            null, android.graphics.Shader.TileMode.CLAMP
+        );
+        knobPaint.setShader(knobGradient);
+        knobPaint.setStyle(Paint.Style.FILL);
+        
+        // Knob shadow
+        knobPaint.setShadowLayer(dp(4), 0, dp(2), 0x88000000);
+        setLayerType(LAYER_TYPE_SOFTWARE, null); // Shadows need software layer usually
+        
         canvas.drawCircle(knobX, knobY, knobRadius, knobPaint);
+        
+        // Subtle knob top highlight
+        Paint highlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        highlightPaint.setColor(0x33FFFFFF);
+        highlightPaint.setStyle(Paint.Style.FILL);
+        canvas.drawCircle(knobX, knobY - knobRadius * 0.2f, knobRadius * 0.6f, highlightPaint);
     }
 
     @Override
