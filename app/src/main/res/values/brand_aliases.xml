@@ -11,9 +11,9 @@
     <!-- Semi-transparent surface container for buttons (70% alpha) -->
     <color name="brand_surface_container_semi">#B31C2026</color>
 
-    <!-- PS2 face button colors (static) -->
-    <color name="ps2_triangle_green">#00D000</color>
-    <color name="ps2_circle_red">#FF3030</color>
-    <color name="ps2_cross_blue">#4080FF</color>
-    <color name="ps2_square_pink">#FF80C0</color>
+    <!-- PS2 face button colors (more vibrant) -->
+    <color name="ps2_triangle_green">#00FF00</color>
+    <color name="ps2_circle_red">#FF4D4D</color>
+    <color name="ps2_cross_blue">#5090FF</color>
+    <color name="ps2_square_pink">#FF80DF</color>
 </resources>
